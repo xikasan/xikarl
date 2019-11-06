@@ -14,7 +14,7 @@ class MLP(tk.Model):
             scale=1,
             dtype=tf.float32,
             activation=tk.layers.ReLU,
-            activation_output=None,
+            output_activation=None,
             name="MLP",
             before_step_func=None,
             after_step_func=None
@@ -35,8 +35,8 @@ class MLP(tk.Model):
         # build output layer
         layer = tk.layers.Dense(dim_output, name=name+"/Lo", dtype=dtype)
         self._layers.append(layer)
-        if activation_output is not None:
-            layer = activation_output(name=name+"/Ao")
+        if output_activation is not None:
+            layer = output_activation(name=name+"/Ao")
             self._layers.append(layer)
 
         # before step func
