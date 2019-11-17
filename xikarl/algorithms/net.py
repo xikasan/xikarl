@@ -52,7 +52,7 @@ class MLP(tk.Model):
         outputs = feature if self.after_step_func is None else self.after_step_func(feature)
         return outputs
 
-    # @tf.function
+    @tf.function
     def _forward_body(self, feature):
         for layer in self._layers:
             feature = layer(feature)

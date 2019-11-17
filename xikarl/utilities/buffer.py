@@ -3,6 +3,16 @@
 import numpy as np
 
 
+def RLDataDict(model):
+    return {
+        "state": model.obs_size,
+        "action": model.act_size,
+        "next_state": model.obs_size,
+        "reward": 1,
+        "done": 1
+    }
+
+
 class Batch:
 
     def __init__(self, size):
@@ -16,6 +26,9 @@ class ReplayBuffer:
         self.index = 0
         self.capacity = capacity
         self._is_full = False
+
+    def __len__(self):
+        return self.capacity if self._is_full else self.index+1
 
     def add(self, **kwargs):
         for key, val in kwargs.items():

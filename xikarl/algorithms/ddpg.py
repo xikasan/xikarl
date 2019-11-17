@@ -66,7 +66,7 @@ class DDPG(DefaultAlgorithm):
             name=self.name+"/"+name
         )
 
-    def get_cation(self, obs, is_test=False):
+    def get_action(self, obs, is_test=False):
         action = self.policy(obs.reshape(1, -1))
         action = tf.squeeze(action).numpy()
         if not is_test:
@@ -76,7 +76,7 @@ class DDPG(DefaultAlgorithm):
             action = np.expand_dims(action, axis=0)
         return action
 
-    def train(self, batch):
+    def train(self, batch, step):
         with tf.device(self.device):
             # update critic
             with tf.GradientTape() as tape:
@@ -88,7 +88,7 @@ class DDPG(DefaultAlgorithm):
             # update policy
             with tf.GradientTape() as tape:
                 act = self.policy(batch.state)
-                Q = tf.concat([batch.state, act], axis=1)
+                Q = self.critic(tf.concat([batch.state, act], axis=1))
                 policy_loss = - tf.reduce_mean(Q)
             policy_grad = tape.gradient(policy_loss, self.policy.trainable_variables)
             self.policy_optimizer.apply_gradients(zip(policy_grad, self.policy.trainable_variables))
@@ -100,7 +100,10 @@ class DDPG(DefaultAlgorithm):
             score = tf.reduce_mean(tderror)
 
             # summary
-            tf.summary.scalar("TDError", score)
+            tf_step = tf.constant(step, dtype=tf.int64)
+            tf.summary.scalar("PPDG/TDError", score, step=tf_step)
+            tf.summary.scalar("PPDG/Critic_Loss", critic_loss, step=tf_step)
+            tf.summary.scalar("PPDG/Policy_Loss", policy_loss, step=tf_step)
 
             return np.squeeze(score.numpy())
 
@@ -132,7 +135,7 @@ if __name__ == '__main__':
         obs = env.reset()
         sum_reward = 0
         for t in range(200):
-            act = model.get_cation(obs)
+            act = model.get_action(obs)
             obs_, reward, done, _ = env.step(act)
             env.render()
             sum_reward += reward
